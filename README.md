@@ -6,40 +6,41 @@ This repository contains study notes and materials for the Microsoft Azure AZ-30
 
 - [Identity & Security](#identity--security)
 - [Data Management](#data-management)
-- [Business Continuity & Disaster Recovery (BCDR)](#business-continuity--disaster-recovery-bcdr)
+- [Business Continuity & Disaster Recovery](#business-continuity--disaster-recovery)
 - [Infrastructure](#infrastructure)
 - [Monitoring](#monitoring)
 - [References](#references)
 
 ## 🔐 Identity & Security
 
-*Add your identity and security notes here*
+Add your identity and security notes here.
 
 ## 📊 Data Management
 
-*Add your data management notes here*
+Add your data management notes here.
 
-## 🔄 Business Continuity & Disaster Recovery (BCDR)
+## 🔄 Business Continuity & Disaster Recovery
 
-*Add your BCDR notes here*
+Add your BCDR notes here.
 
 ## 🏗️ Infrastructure
 
-*Add your infrastructure notes here*
+Add your infrastructure notes here.
 
 ## 📈 Monitoring
 
-*Add your monitoring notes here*
+Add your monitoring notes here.
 
 ## 📚 References
 
-*Add your reference materials here*
+Add your reference materials here.
 
 ---
 
 ## 🤖 Automation
 
 This repository includes GitHub Actions that automatically:
+
 - Reorganizes content when you push changes to `az305.md`
 - Groups content by sections
 - Alphabetizes lists and removes duplicates
@@ -53,4 +54,4 @@ This repository includes GitHub Actions that automatically:
 
 ---
 
-*Last updated: $(date)*
+Last updated: Auto-updated by GitHub Actions
