@@ -21,46 +21,104 @@ jobs:
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
           
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           
       - name: Check if az305.md exists
         id: check_file
         run: |
           if [ -f "az305.md" ]; then
             echo "file_exists=true" >> $GITHUB_OUTPUT
+            echo "✅ Found az305.md file"
           else
             echo "file_exists=false" >> $GITHUB_OUTPUT
+            echo "❌ az305.md file not found"
           fi
+          
+      - name: Create backup
+        if: steps.check_file.outputs.file_exists == 'true'
+        run: |
+          mkdir -p backups
+          cp az305.md "backups/az305_backup_$(date +%Y%m%d_%H%M%S).md"
+          echo "✅ Created backup of az305.md"
           
       - name: Reorganize AZ-305 Notes
         if: steps.check_file.outputs.file_exists == 'true'
         run: |
-          echo "Processing az305.md file..."
-          # This is a placeholder for your reorganization logic
-          # You can replace this with actual markdown processing
+          echo "🔄 Processing az305.md file..."
           
-          # Example: Simple backup and formatting
-          cp az305.md az305_backup_$(date +%Y%m%d_%H%M%S).md
+          # Make reorganization scripts executable
+          chmod +x .github/scripts/reorganize-notes.js
+          chmod +x .github/scripts/format-markdown.js
           
-          # Add your reorganization logic here
-          # For now, this just adds a timestamp comment
-          echo "<!-- Last auto-organized: $(date) -->" >> az305.md
+          # Run the reorganization script
+          node .github/scripts/reorganize-notes.js
+          
+          # Run the markdown formatter
+          node .github/scripts/format-markdown.js
+          
+          echo "✅ AZ-305 notes reorganized and formatted successfully"
+          
+      - name: Check for changes
+        if: steps.check_file.outputs.file_exists == 'true'
+        id: check_changes
+        run: |
+          if git diff --quiet az305.md; then
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
+            echo "ℹ️ No changes detected in az305.md"
+          else
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
+            echo "📝 Changes detected in az305.md"
+            echo "Changes summary:"
+            git diff --stat az305.md
+          fi
           
       - name: Commit changes
-        if: steps.check_file.outputs.file_exists == 'true'
+        if: steps.check_file.outputs.file_exists == 'true' && steps.check_changes.outputs.changes_detected == 'true'
         run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add .
-          git diff --staged --quiet || git commit -m "Auto-reorganize AZ-305 notes - $(date)"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          
+          # Add changes
+          git add az305.md backups/
+          
+          # Create commit message with details
+          COMMIT_MSG="🤖 Auto-reorganize AZ-305 notes
+          
+          - Removed duplicate entries
+          - Fixed markdown formatting
+          - Sorted bullet points alphabetically
+          - Updated timestamp
+          - Created backup
+          
+          Auto-generated on $(date)"
+          
+          git commit -m "$COMMIT_MSG"
+          echo "✅ Committed changes"
           
       - name: Push changes
-        if: steps.check_file.outputs.file_exists == 'true'
+        if: steps.check_file.outputs.file_exists == 'true' && steps.check_changes.outputs.changes_detected == 'true'
         uses: ad-m/github-push-action@master
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{ github.ref }}
+          
+      - name: Summary
+        if: steps.check_file.outputs.file_exists == 'true'
+        run: |
+          echo "## 📋 AZ-305 Auto-Reorganization Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **File processed:** az305.md" >> $GITHUB_STEP_SUMMARY
+          echo "- **Backup created:** ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- **Changes detected:** ${{ steps.check_changes.outputs.changes_detected }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Reorganization tasks completed:**" >> $GITHUB_STEP_SUMMARY
+          echo "  - ✅ Duplicate removal" >> $GITHUB_STEP_SUMMARY
+          echo "  - ✅ Markdown formatting fixes" >> $GITHUB_STEP_SUMMARY
+          echo "  - ✅ Bullet point sorting" >> $GITHUB_STEP_SUMMARY
+          echo "  - ✅ Timestamp update" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.event_name }} on ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
