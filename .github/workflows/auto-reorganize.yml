@@ -1,0 +1,66 @@
+name: Auto Reorganize AZ-305 Notes
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'az305.md'
+      - '*.md'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'az305.md'
+      - '*.md'
+
+jobs:
+  reorganize-az305:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          
+      - name: Check if az305.md exists
+        id: check_file
+        run: |
+          if [ -f "az305.md" ]; then
+            echo "file_exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "file_exists=false" >> $GITHUB_OUTPUT
+          fi
+          
+      - name: Reorganize AZ-305 Notes
+        if: steps.check_file.outputs.file_exists == 'true'
+        run: |
+          echo "Processing az305.md file..."
+          # This is a placeholder for your reorganization logic
+          # You can replace this with actual markdown processing
+          
+          # Example: Simple backup and formatting
+          cp az305.md az305_backup_$(date +%Y%m%d_%H%M%S).md
+          
+          # Add your reorganization logic here
+          # For now, this just adds a timestamp comment
+          echo "<!-- Last auto-organized: $(date) -->" >> az305.md
+          
+      - name: Commit changes
+        if: steps.check_file.outputs.file_exists == 'true'
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add .
+          git diff --staged --quiet || git commit -m "Auto-reorganize AZ-305 notes - $(date)"
+          
+      - name: Push changes
+        if: steps.check_file.outputs.file_exists == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref }}

@@ -1,0 +1,10 @@
+# Azure305 Study Repository
+
+node_modules/
+*.log
+.env
+.DS_Store
+Thumbs.db
+*.tmp
+*.temp
+az305_backup_*.md
