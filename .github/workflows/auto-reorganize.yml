@@ -28,6 +28,13 @@ jobs:
         with:
           node-version: '20'
           
+      - name: Install dependencies
+        run: |
+          echo "📦 Installing Node.js dependencies..."
+          npm init -y
+          npm install node-fetch
+          echo "✅ Dependencies installed"
+          
       - name: Check if az305.md exists
         id: check_file
         run: |
@@ -48,20 +55,40 @@ jobs:
           
       - name: Reorganize AZ-305 Notes
         if: steps.check_file.outputs.file_exists == 'true'
+        env:
+          # AI Processing API Keys (add as repository secrets)
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: |
-          echo "🔄 Processing az305.md file..."
+          echo "🔄 Processing az305.md file with enhanced AI reorganization..."
+          
+          # Check which AI services are available
+          if [ -n "$ANTHROPIC_API_KEY" ]; then
+            echo "🔮 Anthropic Claude API available for AI processing"
+          elif [ -n "$OPENAI_API_KEY" ]; then
+            echo "🧠 OpenAI API available for AI processing"
+          else
+            echo "⚠️  No AI API keys provided - using local reorganization only"
+            echo "   Add ANTHROPIC_API_KEY or OPENAI_API_KEY secrets for AI-powered content organization"
+          fi
           
           # Make reorganization scripts executable
           chmod +x .github/scripts/reorganize-notes.js
           chmod +x .github/scripts/format-markdown.js
           
-          # Run the reorganization script
+          # Run the enhanced reorganization script (includes AI processing if enabled)
+          echo "📋 Step 1: Removing duplicates..."
+          echo "🤖 Step 2: AI-powered content organization..."
+          echo "📝 Step 3: Alphabetical sorting..."
+          echo "🎨 Step 4: Markdown formatting..."
+          echo "⏰ Step 5: Timestamp update..."
+          
           node .github/scripts/reorganize-notes.js
           
-          # Run the markdown formatter
+          # Run the markdown formatter for final polish
           node .github/scripts/format-markdown.js
           
-          echo "✅ AZ-305 notes reorganized and formatted successfully"
+          echo "✅ AZ-305 notes reorganized with AI-powered intelligence!"
           
       - name: Check for changes
         if: steps.check_file.outputs.file_exists == 'true'
@@ -117,8 +144,10 @@ jobs:
           echo "- **Changes detected:** ${{ steps.check_changes.outputs.changes_detected }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Reorganization tasks completed:**" >> $GITHUB_STEP_SUMMARY
           echo "  - ✅ Duplicate removal" >> $GITHUB_STEP_SUMMARY
-          echo "  - ✅ Markdown formatting fixes" >> $GITHUB_STEP_SUMMARY
-          echo "  - ✅ Bullet point sorting" >> $GITHUB_STEP_SUMMARY
+          echo "  - 🔮 AI-powered content organization (Anthropic Claude or OpenAI)" >> $GITHUB_STEP_SUMMARY
+          echo "  - ✅ Intelligent section placement" >> $GITHUB_STEP_SUMMARY
+          echo "  - ✅ Alphabetical bullet point sorting" >> $GITHUB_STEP_SUMMARY
+          echo "  - ✅ Advanced markdown formatting" >> $GITHUB_STEP_SUMMARY
           echo "  - ✅ Timestamp update" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "**Triggered by:** ${{ github.event_name }} on ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY

@@ -1,27 +1,37 @@
-# AZ-305 Study Notes Auto-Organization System
+# AZ-305 Study Notes AI-Powered Auto-Organization System
 
-This repository contains an automated system that reorganizes your AZ-305 certification study notes every time you push changes to the `az305.md` file.
+This repository contains an advanced automated system that intelligently reorganizes your AZ-305 certification study notes using AI-powered content analysis every time you push changes to the `az305.md` file.
 
-## 🤖 Automated Features
+## 🤖 AI-Enhanced Automated Features
 
-The system automatically performs the following tasks when you commit changes to `az305.md`:
+The system now includes **AI-powered content organization** that goes beyond simple sorting:
 
-### ✅ Content Organization
-- **Section-based organization**: Moves content to appropriate sections (Identity & Security, Data Storage, Business Continuity, Infrastructure Design, Monitoring & Governance, References & Links)
-- **Alphabetical sorting**: Sorts bullet points alphabetically within each section
+### ✅ **Smart Content Organization**
+- **AI-Powered Section Placement**: Uses Anthropic Claude 3.5 Sonnet or OpenAI GPT-4 to intelligently move content to appropriate sections
+- **Azure Service Taxonomy Understanding**: AI knows where Azure services belong (e.g., Azure Backup → Business Continuity)
+- **Context-Aware Categorization**: Understands service relationships and dependencies
+- **Intelligent Content Analysis**: Analyzes content meaning, not just keywords
+
+### ✅ **Multi-AI Provider Support**
+- **Primary**: Anthropic Claude 3.5 Sonnet API (`claude-3-5-sonnet-20241022`)
+- **Fallback**: OpenAI GPT-4 Turbo API
+- **Graceful Degradation**: Works without AI keys using local processing
+- **Automatic Provider Selection**: Tries Anthropic first, falls back to OpenAI
+
+### ✅ **Enhanced Processing Pipeline**
+
+**Step 1**: Duplicate Removal  
+**Step 2**: 🤖 **AI-Powered Intelligent Reorganization** ← **NEW!**  
+**Step 3**: Alphabetical Sorting  
+**Step 4**: Advanced Markdown Formatting  
+**Step 5**: Timestamp Update
+
+### ✅ **Traditional Features (Enhanced)**
 - **Duplicate removal**: Removes duplicate entries and links
-- **Table of Contents**: Auto-updates the ToC based on current headings
-
-### ✅ Markdown Formatting
-- **Consistent styling**: Enforces `##` for main headings, `###` for subheadings, `-` for bullet points
-- **Proper spacing**: Adds blank lines around headings and lists for better readability
-- **Link formatting**: Maintains proper markdown link formatting
-- **Code formatting**: Preserves inline code formatting for commands and technical terms
-
-### ✅ File Management
-- **Backup creation**: Creates timestamped backups before making changes
-- **Version control**: Commits changes with detailed commit messages
-- **Timestamp updates**: Updates the "Last updated" comment with current date
+- **Alphabetical sorting**: Sorts bullet points within sections  
+- **Markdown formatting**: Advanced formatting with proper spacing
+- **Table of Contents**: Auto-updates based on current headings
+- **Backup creation**: Creates timestamped backups before changes
 
 ## 📁 File Structure
 

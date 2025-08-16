@@ -3,8 +3,175 @@
 const fs = require('fs');
 const path = require('path');
 
+// Import fetch for Node.js (fallback for older versions)
+let fetch;
+try {
+    fetch = globalThis.fetch || require('node-fetch');
+} catch (error) {
+    console.log('⚠️  fetch not available. AI processing will be skipped.');
+}
+
+// AI-powered content organization function using multiple AI providers
+async function processWithAI(content) {
+    try {
+        console.log('🤖 Sending content to AI for intelligent reorganization...');
+        
+        // Check if fetch is available
+        if (!fetch) {
+            console.log('⚠️  Fetch API not available. Skipping AI processing step.');
+            return content;
+        }
+        
+        // Try Anthropic Claude first, then fallback to OpenAI
+        const anthropicKey = process.env.ANTHROPIC_API_KEY;
+        const openaiKey = process.env.OPENAI_API_KEY;
+        
+        if (anthropicKey) {
+            console.log('🔮 Using Anthropic Claude API for content reorganization...');
+            return await processWithClaude(content, anthropicKey);
+        } else if (openaiKey) {
+            console.log('🧠 Using OpenAI API for content reorganization...');
+            return await processWithOpenAI(content, openaiKey);
+        } else {
+            console.log('⚠️  No AI API keys found. Skipping AI processing step.');
+            console.log('   Set ANTHROPIC_API_KEY or OPENAI_API_KEY environment variable to enable AI processing.');
+            return content;
+        }
+        
+    } catch (error) {
+        console.log('❌ AI processing failed:', error.message);
+        console.log('   Continuing with original content...');
+        return content;
+    }
+}
+
+// Process content using Anthropic Claude API (latest syntax)
+async function processWithClaude(content, apiKey) {
+    try {
+        const prompt = createAIPrompt(content);
+        
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': apiKey,
+                'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify({
+                model: 'claude-3-5-sonnet-20241022', // Latest Claude 3.5 Sonnet model
+                max_tokens: 4000,
+                temperature: 0.1,
+                messages: [
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ]
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`Claude API request failed: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.content && data.content[0] && data.content[0].text) {
+            console.log('✅ Claude AI processing completed successfully');
+            return data.content[0].text;
+        } else {
+            throw new Error('Invalid response format from Claude API');
+        }
+        
+    } catch (error) {
+        console.log('❌ Claude API Error:', error.message);
+        throw error;
+    }
+}
+
+// Process content using OpenAI API (fallback)
+async function processWithOpenAI(content, apiKey) {
+    try {
+        const prompt = createAIPrompt(content);
+        
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                model: 'gpt-4-turbo-preview',
+                messages: [
+                    {
+                        role: 'system',
+                        content: 'You are an expert Azure solutions architect and technical writer specializing in AZ-305 certification content organization.'
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                max_tokens: 4000,
+                temperature: 0.1
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`OpenAI API request failed: ${response.status} ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        
+        if (data.choices && data.choices[0] && data.choices[0].message) {
+            console.log('✅ OpenAI processing completed successfully');
+            return data.choices[0].message.content;
+        } else {
+            throw new Error('Invalid response format from OpenAI API');
+        }
+        
+    } catch (error) {
+        console.log('❌ OpenAI API Error:', error.message);
+        throw error;
+    }
+}
+
+// Create enhanced AI prompt for content reorganization
+function createAIPrompt(content) {
+    return `You are an expert Azure solutions architect helping to organize AZ-305 certification study notes.
+
+TASK: Intelligently reorganize the following markdown content by moving items to their most appropriate sections.
+
+AVAILABLE SECTIONS:
+- **Identity & Security**: Azure AD, RBAC, Conditional Access, MFA, security features, compliance, governance, Key Vault
+- **Data Storage**: Storage accounts, Blob storage, databases (SQL, Cosmos DB), backup solutions, data management, file services
+- **Business Continuity**: Backup strategies, disaster recovery, high availability, Site Recovery, availability zones/sets
+- **Infrastructure Design**: Compute services (VMs, App Service, AKS, containers), networking (VNet, VPN, Load Balancer), scaling
+- **Monitoring & Governance**: Azure Monitor, Application Insights, policies, cost management, governance, Log Analytics
+- **References & Links**: Documentation, external resources, study materials, certification guides
+
+INTELLIGENT REORGANIZATION RULES:
+1. **Smart categorization**: Move misplaced items to their most logical sections based on Azure service taxonomy
+2. **Context awareness**: Consider service relationships (e.g., Azure Backup → Business Continuity)
+3. **Preserve structure**: Maintain exact markdown formatting, bullet points, links, and hierarchy
+4. **No content modification**: Do NOT change, add, or remove any existing text content
+5. **Section integrity**: Keep related items grouped within their new correct sections
+6. **Uncertainty handling**: If placement is ambiguous, leave in current section
+
+SPECIAL HANDLING:
+- Move Azure services to their primary function category
+- Group related technologies together
+- Maintain subsection organization within main sections
+- Preserve all links, formatting, and metadata
+
+CONTENT TO REORGANIZE:
+${content}
+
+Return the reorganized content with improved section placement while maintaining exact formatting:`;
+}
+
 // Main reorganization function
-function reorganizeAZ305Notes() {
+async function reorganizeAZ305Notes() {
     const filePath = 'az305.md';
     
     if (!fs.existsSync(filePath)) {
@@ -16,16 +183,24 @@ function reorganizeAZ305Notes() {
     
     let content = fs.readFileSync(filePath, 'utf8');
     
-    // Remove duplicate lines
+    // Step 1: Remove duplicate lines
+    console.log('Step 1: Removing duplicates...');
     content = removeDuplicates(content);
     
-    // Sort bullet points alphabetically
+    // Step 2: AI-powered content organization
+    console.log('Step 2: AI-powered content organization...');
+    content = await processWithAI(content);
+    
+    // Step 3: Sort bullet points alphabetically
+    console.log('Step 3: Sorting bullet points alphabetically...');
     content = sortBulletPoints(content);
     
-    // Fix markdown formatting
+    // Step 4: Fix markdown formatting
+    console.log('Step 4: Fixing markdown formatting...');
     content = fixMarkdownFormatting(content);
     
-    // Update timestamp
+    // Step 5: Update timestamp
+    console.log('Step 5: Updating timestamp...');
     content = updateTimestamp(content);
     
     // Write back to file
@@ -200,7 +375,12 @@ function updateTimestamp(content) {
 
 // Run the reorganization
 if (require.main === module) {
-    reorganizeAZ305Notes();
+    reorganizeAZ305Notes()
+        .then(() => console.log('Script completed successfully'))
+        .catch(error => {
+            console.error('Script failed:', error);
+            process.exit(1);
+        });
 }
 
 module.exports = { reorganizeAZ305Notes };
